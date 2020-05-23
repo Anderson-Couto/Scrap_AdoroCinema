@@ -1,6 +1,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
-from dao import salvar_nome_desc, desconectar_banco
+from dao import salvar, desconectar_banco
+import re
 
 
 class AdoroCinema:
@@ -22,11 +23,30 @@ class AdoroCinema:
         for j in self.links_completos:
             self.driver.get(j)
             self.page_desc = bs(self.driver.page_source, 'html.parser')
+
+            # Nome do Filme
             nome_filme = self.page_desc.find('div', {'class': 'titlebar-title titlebar-title-lg'}).text
             nome_filme = nome_filme.strip().title()
+
+            # Descriçao do Filme
             descricao_filme = self.page_desc.find('div', {'class': 'content-txt'}).text
             descricao_filme = descricao_filme.strip()
-            salvar_nome_desc(nome_filme, descricao_filme)
+
+            # Div das informações
+            infos = self.page_desc.find('div', {'class': 'meta-body-item meta-body-info'})
+
+            # Data de Lançamento
+            lancamento = infos.find('a', {'class': 'xXx date blue-link'}).text.strip()
+
+            # Duração do Filme
+            duracao = re.search("[\d]{0,9}h [\d]{0,9}min", str(infos)).group().strip()
+
+            # Categorias do Filme
+            todos_dados = infos.find_all('a', {'class': 'xXx'})
+            lista = [str(objeto.contents[0]).strip() for objeto in todos_dados]
+            categorias = '/'.join(lista[1:])
+
+            salvar(nome_filme, lancamento, duracao, categorias, descricao_filme)
 
 
 """

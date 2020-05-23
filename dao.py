@@ -13,10 +13,10 @@ except mysql.connector.Error as error:
         print(error)
 
 
-def salvar_nome_desc(nome, descricao):
+def salvar(nome, lancamento, duracao, categorias, descricao):
     cursor = db_connection.cursor()
-    sql = "INSERT INTO filmes (Nome, Descricao) VALUES (%s, %s)"
-    values = (f"{nome}", f"{descricao}")
+    sql = "INSERT INTO filmes (Nome, Lancamento, Duracao, Categorias, Descricao) VALUES (%s, %s, %s, %s, %s)"
+    values = (f"{nome}", f"{lancamento}", f"{duracao}", f"{categorias}", f"{descricao}")
     cursor.execute(sql, values)
     cursor.close()
     db_connection.commit()
