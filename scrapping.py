@@ -1,6 +1,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 from dao import salvar, desconectar_banco
+from classe_duracao import Duracao
 import re
 
 
@@ -39,7 +40,8 @@ class AdoroCinema:
             lancamento = infos.find('a', {'class': 'xXx date blue-link'}).text.strip()
 
             # Duração do Filme
-            duracao = re.search("[\d]{0,9}h [\d]{0,9}min", str(infos)).group().strip()
+            duracao = re.search("[\d]{0,9}h [\d]{0,9}min", str(infos)).group()
+            duracao = Duracao(duracao)
 
             # Categorias do Filme
             todos_dados = infos.find_all('a', {'class': 'xXx'})
