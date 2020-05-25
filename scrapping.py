@@ -1,7 +1,7 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup as bs
 from dao import salvar, desconectar_banco
-from classe_duracao import Duracao
+from classes import Duracao, Lancamento
 import re
 
 
@@ -37,7 +37,14 @@ class AdoroCinema:
             infos = self.page_desc.find('div', {'class': 'meta-body-item meta-body-info'})
 
             # Data de Lançamento
-            lancamento = infos.find('a', {'class': 'xXx date blue-link'}).text.strip()
+            try:
+                try:
+                    lancamento = infos.find('a', {'class': 'xXx date blue-link'}).text.strip()
+                except:
+                    lancamento = infos.find('span', {'class': 'date'}).text.strip()
+            except:
+                lancamento = None
+            lancamento = Lancamento(lancamento)
 
             # Duração do Filme
             duracao = re.search("[\d]{0,9}h [\d]{0,9}min", str(infos)).group()
@@ -46,31 +53,32 @@ class AdoroCinema:
             # Categorias do Filme
             todos_dados = infos.find_all('a', {'class': 'xXx'})
             lista = [str(objeto.contents[0]).strip() for objeto in todos_dados]
-            categorias = '/'.join(lista[1:])
+            lista2 = []
+            for item in lista:
+                if re.match(r"\d", item) is None:
+                    lista2.append(item)
+            categorias = '/'.join(lista2[:])
 
+            # Salvando Informações no DB
             salvar(nome_filme, lancamento, duracao, categorias, descricao_filme)
 
-
-"""
-    def passa_pagina(self):
-        v = self.obj_AC.find('a', {'class': '"xXx button btn-default btn-large fr"'}).get('href')
+    def prox_pagina(self):
+        v = self.obj_AC.find('a', {'class': 'xXx button btn-default btn-large fr'}).get('href')
         self.end_Mfil = f'{self.end_base}{v}'
-        if v != 0:
-            return True
-"""
+
+    def executar_driver(self):
+        self.navegar()
+        self.encontrar_obj()
+        self.raspagem()
+        self.prox_pagina()
+
 
 ff = webdriver.Firefox()
 g = AdoroCinema(ff)
-g.navegar()
-g.encontrar_obj()
-g.raspagem()
-"""
-g.passa_pagina()
-while g.passa_pagina():
-    g.navegar()
-    g.encontrar_obj()
-    g.raspagem()
-    g.passa_pagina()
-"""
+resposta = input("Deseja passar quantas paginas?").strip()
+inicio = 0
+while inicio <= int(resposta):
+    g.executar_driver()
+    inicio += 1
 ff.quit()
 desconectar_banco()
